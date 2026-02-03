@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/bjluckow/gitignorer/internal/fetch"
@@ -10,17 +12,33 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	writeFile := flag.Bool("o", false, "write output to ./.gitignore -- use redirection (>) for custom path")
+	flag.Usage = usage
+	flag.Parse()
+
+	args := flag.Args()
+
+	if len(os.Args) < 1 {
 		usage()
 		os.Exit(1)
 	}
 
-	if os.Args[1] == "list" {
+	if args[0] == "list" {
 		list()
 		return
-	} else {
-		generate(os.Args[1:])
 	}
+
+	var out io.Writer = os.Stdout
+	if *writeFile {
+		f, err := os.Create(".gitignore")
+		if err != nil {
+			fatal(err)
+		}
+		defer f.Close()
+		out = f
+	}
+
+	generate(os.Args[1:], out)
 }
 
 func usage() {
@@ -35,7 +53,7 @@ func fatal(err error) {
 	os.Exit(1)
 }
 
-func generate(args []string) {
+func generate(args []string, out io.Writer) {
 	templates, err := fetch.LoadIndex()
 	if err != nil {
 		fatal(err)
@@ -51,9 +69,9 @@ func generate(args []string) {
 		if err != nil {
 			fatal(err)
 		}
-		fmt.Printf("# === %s ===\n", t.Name)
-		fmt.Println(body)
-		fmt.Println()
+		fmt.Fprintf(out, "# === %s ===\n", t.Name)
+		fmt.Fprintln(out, body)
+		fmt.Fprintln(out)
 	}
 }
 
