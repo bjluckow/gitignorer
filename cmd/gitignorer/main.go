@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	writeFile := flag.Bool("o", false, "write output to ./.gitignore")
+	writeFile := flag.Bool("w", false, "write output to ./.gitignore")
 	appendFile := flag.Bool("a", false, "append output to ./gitignore")
 	flag.Usage = usage
 	flag.Parse()
@@ -52,7 +52,7 @@ func usage() {
 	fmt.Println(`usage:
 	gitignorer list
 	gitignorer <template1 template2...> (e.g. "go python node")
-		-o  write output to ./.gitignore
+		-w  write output to ./.gitignore
 		-a  append output to ./.gitignore
 	`)
 }
