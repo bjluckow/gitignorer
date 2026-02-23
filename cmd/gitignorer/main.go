@@ -12,13 +12,14 @@ import (
 )
 
 func main() {
-	writeFile := flag.Bool("o", false, "write output to ./.gitignore -- use redirection (>) for custom path")
+	writeFile := flag.Bool("o", false, "write output to ./.gitignore")
+	appendFile := flag.Bool("a", false, "append output to ./gitignore")
 	flag.Usage = usage
 	flag.Parse()
 
 	args := flag.Args()
 
-	if len(os.Args) < 1 {
+	if len(args) < 1 {
 		usage()
 		os.Exit(1)
 	}
@@ -36,15 +37,23 @@ func main() {
 		}
 		defer f.Close()
 		out = f
+	} else if *appendFile {
+		f, err := os.OpenFile(".gitignore", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fatal(err)
+		}
+		defer f.Close()
+		out = f
 	}
-
 	generate(os.Args[1:], out)
 }
 
 func usage() {
 	fmt.Println(`usage:
-	gitignorer <template1 template2...> (e.g. "go python node")
 	gitignorer list
+	gitignorer <template1 template2...> (e.g. "go python node")
+		-o  write output to ./.gitignore
+		-a  append output to ./.gitignore
 	`)
 }
 
