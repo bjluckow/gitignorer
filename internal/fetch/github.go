@@ -2,6 +2,7 @@ package fetch
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -10,54 +11,53 @@ import (
 )
 
 const (
-	repoAPI = "https://api.github.com/repos/github/gitignore/contents"
+	treeAPI = "https://api.github.com/repos/github/gitignore/git/trees/main?recursive=1"
 	rawBase = "https://raw.githubusercontent.com/github/gitignore/main/"
 )
 
-type ghEntry struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
-	Type string `json:"type"`
-	URL  string `json:"url"`
+type treeResponse struct {
+	Tree []struct {
+		Path string `json:"path"`
+		Type string `json:"type"`
+	} `json:"tree"`
 }
 
 func LoadIndex() ([]model.Template, error) {
-	var out []model.Template
-	if err := walk(repoAPI, &out); err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func walk(url string, out *[]model.Template) error {
-	resp, err := http.Get(url)
+	resp, err := http.Get(treeAPI)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var entries []ghEntry
-	if err := json.NewDecoder(resp.Body).Decode(&entries); err != nil {
-		return err
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("github API error: %s\n%s", resp.Status, string(body))
 	}
 
-	for _, e := range entries {
-		switch e.Type {
-		case "file":
-			if strings.HasSuffix(e.Name, ".gitignore") {
-				*out = append(*out, model.Template{
-					Name: strings.TrimSuffix(e.Name, ".gitignore"),
-					Path: e.Path,
-				})
-			}
-		case "dir":
-			if err := walk(e.URL, out); err != nil {
-				return err
-			}
+	var tr treeResponse
+	if err := json.NewDecoder(resp.Body).Decode(&tr); err != nil {
+		return nil, err
+	}
+
+	var out []model.Template
+	for _, node := range tr.Tree {
+		if node.Type == "blob" && strings.HasSuffix(node.Path, ".gitignore") {
+			name := strings.TrimSuffix(node.Path, ".gitignore")
+			name = filepathBase(name)
+
+			out = append(out, model.Template{
+				Name: name,
+				Path: node.Path,
+			})
 		}
-
 	}
-	return nil
+
+	return out, nil
+}
+
+func filepathBase(p string) string {
+	parts := strings.Split(p, "/")
+	return parts[len(parts)-1]
 }
 
 func FetchTemplate(t model.Template) (string, error) {

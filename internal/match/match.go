@@ -1,7 +1,6 @@
 package match
 
 import (
-	"regexp"
 	"strings"
 
 	"github.com/bjluckow/gitignorer/internal/model"
@@ -12,10 +11,10 @@ func Templates(args []string, templates []model.Template) []model.Template {
 	var out []model.Template
 
 	for _, arg := range args {
-		rx := regexp.MustCompile("(?i)" + regexp.QuoteMeta(arg))
+		argNorm := normalize(arg)
 
 		for _, t := range templates {
-			if rx.MatchString(normalize(t.Name)) {
+			if normalize(t.Name) == argNorm {
 				if !seen[t.Path] {
 					seen[t.Path] = true
 					out = append(out, t)
@@ -23,12 +22,14 @@ func Templates(args []string, templates []model.Template) []model.Template {
 			}
 		}
 	}
+
 	return out
 }
 
 func normalize(s string) string {
 	s = strings.ToLower(s)
-	s = strings.ReplaceAll(s, "_", " ")
-	s = strings.ReplaceAll(s, "-", " ")
+	s = strings.ReplaceAll(s, "_", "")
+	s = strings.ReplaceAll(s, "-", "")
+	s = strings.ReplaceAll(s, " ", "")
 	return s
 }
