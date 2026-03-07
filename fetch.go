@@ -1,13 +1,12 @@
-package fetch
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strings"
-
-	"github.com/bjluckow/gitignorer/internal/model"
 )
 
 const (
@@ -22,7 +21,7 @@ type treeResponse struct {
 	} `json:"tree"`
 }
 
-func LoadIndex() ([]model.Template, error) {
+func fetchIndex() ([]Template, error) {
 	resp, err := http.Get(treeAPI)
 	if err != nil {
 		return nil, err
@@ -39,38 +38,33 @@ func LoadIndex() ([]model.Template, error) {
 		return nil, err
 	}
 
-	var out []model.Template
+	var out []Template
 	for _, node := range tr.Tree {
 		if node.Type == "blob" && strings.HasSuffix(node.Path, ".gitignore") {
 			name := strings.TrimSuffix(node.Path, ".gitignore")
-			name = filepathBase(name)
-
-			out = append(out, model.Template{
-				Name: name,
-				Path: node.Path,
-			})
+			name = filepath.Base(name)
+			out = append(out, Template{Name: name, Path: node.Path})
 		}
 	}
-
 	return out, nil
 }
 
-func filepathBase(p string) string {
-	parts := strings.Split(p, "/")
-	return parts[len(parts)-1]
-}
-
-func FetchTemplate(t model.Template) (string, error) {
+func fetchTemplate(t Template) (Template, error) {
 	resp, err := http.Get(rawBase + t.Path)
 	if err != nil {
-		return "", err
+		return Template{}, err
 	}
 	defer resp.Body.Close()
 
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+	if resp.StatusCode != http.StatusOK {
+		return Template{}, fmt.Errorf("failed to fetch %s: %s", t.Name, resp.Status)
 	}
 
-	return string(b), nil
+	b, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return Template{}, err
+	}
+
+	t.Content = string(b)
+	return t, nil
 }
