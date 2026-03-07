@@ -40,9 +40,8 @@ func runFetch(args []string) {
 	append_ := fs.Bool("a", false, "append output to ./.gitignore")
 	refresh := fs.Bool("r", false, "refresh cached templates")
 	doClean := fs.Bool("c", false, "clean output before writing")
-	outPath := fs.String("o", "", "write output to a custom path")
 	fs.Usage = func() {
-		fmt.Println("usage: gitignorer fetch [-w] [-a] [-r] [-c] [-o path] <template1 template2 ...>")
+		fmt.Println("usage: gitignorer fetch [-w] [-a] [-r] [-c] <template1 template2 ...>")
 		fs.PrintDefaults()
 	}
 	fs.Parse(args)
@@ -65,14 +64,7 @@ func runFetch(args []string) {
 
 	// resolve output writer
 	var out io.Writer = os.Stdout
-	if *outPath != "" {
-		f, err := os.Create(*outPath)
-		if err != nil {
-			fatal(err)
-		}
-		defer f.Close()
-		out = f
-	} else if *write {
+	if *write {
 		f, err := os.Create(".gitignore")
 		if err != nil {
 			fatal(err)
@@ -135,8 +127,9 @@ func runList(args []string) {
 
 func runClean(args []string) {
 	fs := flag.NewFlagSet("clean", flag.ExitOnError)
+	write := fs.Bool("w", false, "write cleaned output back to file")
 	fs.Usage = func() {
-		fmt.Println("usage: gitignorer clean [path]")
+		fmt.Println("usage: gitignorer clean [-w] [path]")
 		fs.PrintDefaults()
 	}
 	fs.Parse(args)
@@ -151,7 +144,17 @@ func runClean(args []string) {
 		fatal(err)
 	}
 
-	clean(string(b), os.Stdout)
+		out := io.Writer(os.Stdout)
+	if *write {
+		f, err := os.Create(path)
+		if err != nil {
+			fatal(err)
+		}
+		defer f.Close()
+		out = f
+	}
+
+	clean(string(b), out)
 }
 
 func runCache(args []string) {
