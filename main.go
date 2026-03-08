@@ -19,8 +19,8 @@ func main() {
 	}
 
 	switch flag.Arg(0) {
-	case "fetch":
-		runFetch(flag.Args()[1:])
+	case "ignore":
+		runIgnore(flag.Args()[1:])
 	case "list":
 		runList(flag.Args()[1:])
 	case "cache":
@@ -32,7 +32,7 @@ func main() {
 	}
 }
 
-func runFetch(args []string) {
+func runIgnore(args []string) {
 	fs := flag.NewFlagSet("fetch", flag.ExitOnError)
 	write := fs.Bool("w", false, "write output to ./.gitignore")
 	append_ := fs.Bool("a", false, "append output to ./.gitignore")

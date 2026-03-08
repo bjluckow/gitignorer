@@ -9,10 +9,10 @@ go install github.com/bjluckow/gitignorer@latest
 
 ## Subcommands
 
-### `fetch`
-Fetch and output one or more gitignore templates.
+### `Ignore`
+Ignore and output one or more gitignore templates.
 ```bash
-gitignorer fetch go python node
+gitignorer ignore go python node
 ```
 
 | Flag | Description |
@@ -22,13 +22,13 @@ gitignorer fetch go python node
 | `-r` | Refresh cached templates |
 ```bash
 # Write to .gitignore
-gitignorer fetch -w go python
+gitignorer ignore -w go python
 
 # Append to existing .gitignore
-gitignorer fetch -a node
+gitignorer ignore -a node
 
 # Custom path via shell redirection
-gitignorer fetch go > /path/to/.gitignore
+gitignorer ignore go > /path/to/.gitignore
 ```
 
 ### `list`
