@@ -33,12 +33,12 @@ func main() {
 }
 
 func runIgnore(args []string) {
-	fs := flag.NewFlagSet("fetch", flag.ExitOnError)
+	fs := flag.NewFlagSet("ignore", flag.ExitOnError)
 	write := fs.Bool("w", false, "write output to ./.gitignore")
 	append_ := fs.Bool("a", false, "append output to ./.gitignore")
 	refresh := fs.Bool("r", false, "refresh cached templates")
 	fs.Usage = func() {
-		fmt.Println("usage: gitignorer fetch [-w] [-a] [-r] [-c] <template1 template2 ...>")
+		fmt.Println("usage: gitignorer ignore [-w] [-a] [-r] [-c] <template1 template2 ...>")
 		fs.PrintDefaults()
 	}
 	fs.Parse(args)
@@ -140,7 +140,7 @@ func globalUsage() {
 	fmt.Println(`usage: gitignorer <subcommand> [flags] [args]
 
 subcommands:
-  fetch   fetch gitignore templates
+  ignore   ignore gitignore templates
   list    list available templates
   cache   display cache file path`)
 }
