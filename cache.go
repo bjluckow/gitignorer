@@ -65,3 +65,4 @@ func loadOrFetch(refresh bool) (Cache, error) {
 	}
 	return c, nil
 }
+

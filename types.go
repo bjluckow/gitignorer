@@ -7,3 +7,4 @@ type Template struct {
 }
 
 type Cache map[string]Template
+

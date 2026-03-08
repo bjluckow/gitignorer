@@ -23,10 +23,8 @@ func main() {
 		runFetch(flag.Args()[1:])
 	case "list":
 		runList(flag.Args()[1:])
-	case "clean":
-		runClean(flag.Args()[1:])
 	case "cache":
-    	runCache(flag.Args()[1:])
+		runCache(flag.Args()[1:])
 	default:
 		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", flag.Arg(0))
 		globalUsage()
@@ -36,10 +34,9 @@ func main() {
 
 func runFetch(args []string) {
 	fs := flag.NewFlagSet("fetch", flag.ExitOnError)
-	write   := fs.Bool("w", false, "write output to ./.gitignore")
+	write := fs.Bool("w", false, "write output to ./.gitignore")
 	append_ := fs.Bool("a", false, "append output to ./.gitignore")
 	refresh := fs.Bool("r", false, "refresh cached templates")
-	doClean := fs.Bool("c", false, "clean output before writing")
 	fs.Usage = func() {
 		fmt.Println("usage: gitignorer fetch [-w] [-a] [-r] [-c] <template1 template2 ...>")
 		fs.PrintDefaults()
@@ -99,11 +96,7 @@ func runFetch(args []string) {
 	}
 
 	output := sb.String()
-	if *doClean {
-		clean(output, out)
-	} else {
-		fmt.Fprint(out, output)
-	}
+	fmt.Fprint(out, output)
 }
 
 func runList(args []string) {
@@ -125,40 +118,8 @@ func runList(args []string) {
 	}
 }
 
-func runClean(args []string) {
-	fs := flag.NewFlagSet("clean", flag.ExitOnError)
-	write := fs.Bool("w", false, "write cleaned output back to file")
-	fs.Usage = func() {
-		fmt.Println("usage: gitignorer clean [-w] [path]")
-		fs.PrintDefaults()
-	}
-	fs.Parse(args)
-
-	path := ".gitignore"
-	if fs.NArg() > 0 {
-		path = fs.Arg(0)
-	}
-
-	b, err := os.ReadFile(path)
-	if err != nil {
-		fatal(err)
-	}
-
-		out := io.Writer(os.Stdout)
-	if *write {
-		f, err := os.Create(path)
-		if err != nil {
-			fatal(err)
-		}
-		defer f.Close()
-		out = f
-	}
-
-	clean(string(b), out)
-}
-
 func runCache(args []string) {
-    fmt.Println(cachePath())
+	fmt.Println(cachePath())
 }
 
 func matchTemplates(args []string, cache Cache) []Template {
@@ -181,7 +142,7 @@ func globalUsage() {
 subcommands:
   fetch   fetch gitignore templates
   list    list available templates
-  clean   deduplicate and reorganize a .gitignore`)
+  cache   display cache file path`)
 }
 
 func fatal(err error) {
